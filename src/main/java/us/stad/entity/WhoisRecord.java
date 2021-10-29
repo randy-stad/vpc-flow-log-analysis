@@ -57,11 +57,11 @@ public class WhoisRecord implements Serializable {
     }
 
     public void parseWhoisLine(final String line) {
-        if (line.startsWith("CIDR:")) {
+        if (line.toLowerCase().startsWith("cidr:")) {
             this.cidr = line.substring(line.indexOf(':') + 1).trim();
-        } else if (line.startsWith("Organization:")) {
+        } else if (line.toLowerCase().startsWith("organization:")) {
             this.organization = line.substring(line.indexOf(':') + 1).trim();
-        } else if (line.startsWith("NetName:")) {
+        } else if (line.toLowerCase().startsWith("netname:")) {
             this.netname = line.substring(line.indexOf(':') + 1).trim();
         }
     }
