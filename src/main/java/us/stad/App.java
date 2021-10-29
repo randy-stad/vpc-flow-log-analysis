@@ -3,8 +3,6 @@ package us.stad;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.github.jgonian.ipmath.Ipv4;
 import com.github.jgonian.ipmath.Ipv4Range;
@@ -20,7 +18,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
 import us.stad.entity.CidrGroup;
-import us.stad.entity.FlowRecord;
 import us.stad.entity.WhoisRecord;
 
 /**
@@ -53,8 +50,8 @@ public class App {
                 maxLineCount = Integer.parseInt(line.getOptionValue("l"));
             }
             processSourceFile(line.getOptionValue("s"), maxLineCount);
-            System.out.println("WHOIS cache hit: " + whoisMapHit);
-            System.out.println("CIDR cache hit:" + CidrGroup.cacheHit);
+            System.out.println("WHOIS cache hit: " + whoisCacheHit + " miss: " + whoisCacheMiss);
+            System.out.println("CIDR cache hit: " + CidrGroup.cacheHit);
             CidrGroup.dumpCache();
         } else {
             for (String address : line.getArgList()) {
@@ -118,7 +115,8 @@ public class App {
         return RANGE10.contains(ipv4) || RANGE172.contains(ipv4) || RANGE192.contains(ipv4);
     }
 
-    private static int whoisMapHit = 0;
+    private static int whoisCacheHit = 0;
+    private static int whoisCacheMiss = 0;
 
     /**
      * Call the command line version of whois on the system to get details about the
@@ -141,10 +139,11 @@ public class App {
         }
 
         if (result != null) {
-            whoisMapHit++;
+            whoisCacheHit++;
             return result;
         }
     
+        whoisCacheMiss++;
         result = new WhoisRecord(address);
         String command = "whois " + address;
 
