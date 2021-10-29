@@ -1,6 +1,9 @@
 package us.stad.entity;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -9,6 +12,9 @@ import java.util.Set;
 
 import com.github.jgonian.ipmath.Ipv4;
 import com.github.jgonian.ipmath.Ipv4Range;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
 public class CidrGroup {
 
@@ -63,9 +69,19 @@ public class CidrGroup {
         return null;
     }
 
-    public static void dumpCache() {
-        for (CidrGroup group : CACHE.values()) {
-            System.out.println(group);
+    public static void dumpCache(final Writer writer) throws IOException {
+        CSVFormat csvFormat = CSVFormat.DEFAULT.builder().setHeader("cidr_range", "port", "netname", "organization", "inbound_ip", "outbound_ip").build();
+        try (CSVPrinter csvPrinter = new CSVPrinter(writer, csvFormat)) {
+            for (CidrGroup group : CACHE.values()) {
+                csvPrinter.printRecord(
+                    Arrays.toString(group.cidrRanges.toArray()),
+                    group.port,
+                    group.netname,
+                    group.organization,
+                    Arrays.toString(group.inboundList.toArray()),
+                    Arrays.toString(group.outboundList.toArray()));
+                csvPrinter.flush();
+            }
         }
     }
 

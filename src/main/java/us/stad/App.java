@@ -2,6 +2,7 @@ package us.stad;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
 
 import com.github.jgonian.ipmath.Ipv4;
@@ -44,6 +45,11 @@ public class App {
             System.exit(0);
         }
 
+        if (line.hasOption("s") && !line.hasOption("o")) {
+            new HelpFormatter().printHelp("vpc-flow-log-analysis", options);
+            System.exit(1);
+        }
+
         if (line.hasOption("s")) {
             int maxLineCount = Integer.MAX_VALUE;
             if (line.hasOption("l")) {
@@ -52,7 +58,13 @@ public class App {
             processSourceFile(line.getOptionValue("s"), maxLineCount);
             System.out.println("WHOIS cache hit: " + whoisCacheHit + " miss: " + whoisCacheMiss);
             System.out.println("CIDR cache hit: " + CidrGroup.cacheHit);
-            CidrGroup.dumpCache();
+
+            try (FileWriter writer = new FileWriter(line.getOptionValue("o"))) {
+                CidrGroup.dumpCache(writer);
+            } catch (Exception e) {
+                System.err.println(e.getMessage());
+                System.exit(1);
+            }
         } else {
             for (String address : line.getArgList()) {
                 System.out.println(getWhoisRecord(address));
@@ -174,6 +186,7 @@ public class App {
 
         Options options = new Options();
         options.addOption("l", "lines", true, "process a maximum number of specified lines in input file");
+        options.addOption("o", "output", true, "output file (required if source specified)");
         options.addOption("s", "source", true,
                 "csv file to parse with format SourceAddress, DestinationAddress, SourcePort, DestinationPort, Protocal");
         options.addOption("h", "help", false, "print this message");
