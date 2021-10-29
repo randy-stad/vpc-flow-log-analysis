@@ -21,12 +21,16 @@ import org.hibernate.cfg.Configuration;
 import us.stad.entity.CidrGroup;
 import us.stad.entity.WhoisRecord;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * VPC flow log analysis tool.
  */
-public class App {
+public class VpcFlowLogAnalysis {
 
-    static final SessionFactory SESSION_FACTORY = new Configuration().configure().buildSessionFactory();
+    private static final Log LOG = LogFactory.getLog(VpcFlowLogAnalysis.class);
+    private static final SessionFactory SESSION_FACTORY = new Configuration().configure().buildSessionFactory();
 
     public static void main(String[] args) {
 
@@ -36,7 +40,7 @@ public class App {
             CommandLineParser parser = new DefaultParser();
             line = parser.parse(options, args);
         } catch (ParseException exp) {
-            System.err.println("Parsing failed: " + exp.getMessage());
+            LOG.error("Parsing failed", exp);
             System.exit(1);
         }
 
@@ -56,18 +60,18 @@ public class App {
                 maxLineCount = Integer.parseInt(line.getOptionValue("l"));
             }
             processSourceFile(line.getOptionValue("s"), maxLineCount);
-            System.out.println("WHOIS cache hit: " + whoisCacheHit + " miss: " + whoisCacheMiss);
-            System.out.println("CIDR cache hit: " + CidrGroup.cacheHit);
+            LOG.info("WHOIS cache hit: " + whoisCacheHit + " miss: " + whoisCacheMiss);
+            LOG.info("CIDR cache hit: " + CidrGroup.cacheHit);
 
             try (FileWriter writer = new FileWriter(line.getOptionValue("o"))) {
                 CidrGroup.dumpCache(writer);
             } catch (Exception e) {
-                System.err.println(e.getMessage());
+                LOG.error("CSV dump failed", e);
                 System.exit(1);
             }
         } else {
             for (String address : line.getArgList()) {
-                System.out.println(getWhoisRecord(address));
+                LOG.info(getWhoisRecord(address));
             }
         }
 
