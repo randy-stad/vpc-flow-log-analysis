@@ -19,7 +19,7 @@ import org.apache.commons.csv.CSVPrinter;
 public class CidrGroup {
 
     private static Map<String, CidrGroup> CACHE = new HashMap<>();
-    public static int cacheHit = 0;
+    private static int CACHE_HIT = 0;
 
     List<Ipv4Range> cidrRanges = new ArrayList<>();
     String organization;
@@ -53,11 +53,15 @@ public class CidrGroup {
         final Ipv4 ipv4 = Ipv4.parse(address);
         for (Ipv4Range i : this.cidrRanges) {
             if (i.contains(ipv4)) {
-                cacheHit++;
+                CidrGroup.CACHE_HIT++;
                 return true;
             }
         }
         return false;
+    }
+
+    public static int getCacheHit() {
+        return CACHE_HIT;
     }
 
     public static CidrGroup getMatchingCidrGroup(String address, String port) {

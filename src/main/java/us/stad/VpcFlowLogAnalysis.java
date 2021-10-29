@@ -61,7 +61,7 @@ public class VpcFlowLogAnalysis {
             }
             processSourceFile(line.getOptionValue("s"), maxLineCount);
             LOG.info("WHOIS cache hit: " + whoisCacheHit + " miss: " + whoisCacheMiss);
-            LOG.info("CIDR cache hit: " + CidrGroup.cacheHit);
+            LOG.info("CIDR cache hit: " + CidrGroup.getCacheHit());
 
             try (FileWriter writer = new FileWriter(line.getOptionValue("o"))) {
                 CidrGroup.dumpCache(writer);
