@@ -70,12 +70,14 @@ public class CidrGroup {
     }
 
     public static void dumpCache(final Writer writer) throws IOException {
-        CSVFormat csvFormat = CSVFormat.DEFAULT.builder().setHeader("cidr_range", "port", "netname", "organization", "inbound_ip", "outbound_ip").build();
+        CSVFormat csvFormat = CSVFormat.DEFAULT.builder().setHeader("cidr_range", "port", "inbound", "outbound", "netname", "organization", "inbound_ip", "outbound_ip").build();
         try (CSVPrinter csvPrinter = new CSVPrinter(writer, csvFormat)) {
             for (CidrGroup group : CACHE.values()) {
                 csvPrinter.printRecord(
                     Arrays.toString(group.cidrRanges.toArray()),
                     group.port,
+                    group.inboundList.isEmpty() ? "false" : "true",
+                    group.outboundList.isEmpty() ? "false" : "true",
                     group.netname,
                     group.organization,
                     Arrays.toString(group.inboundList.toArray()),
