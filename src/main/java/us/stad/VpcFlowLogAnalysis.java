@@ -87,7 +87,8 @@ public class VpcFlowLogAnalysis {
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String line;
             int lineCount = 0;
-            while ((line = reader.readLine().trim()) != null) {
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
                 lineCount++;
                 if (lineCount > maxLineCount) {
                     return;
