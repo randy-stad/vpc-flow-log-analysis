@@ -78,14 +78,14 @@ public class CidrGroup {
         try (CSVPrinter csvPrinter = new CSVPrinter(writer, csvFormat)) {
             for (CidrGroup group : CACHE.values()) {
                 csvPrinter.printRecord(
-                    Arrays.toString(group.cidrRanges.toArray()),
+                    Arrays.toString(group.cidrRanges.toArray()).replace('[', '{').replace(']', '}'),
                     group.port,
                     group.inboundList.isEmpty() ? "false" : "true",
                     group.outboundList.isEmpty() ? "false" : "true",
                     group.netname,
                     group.organization,
-                    Arrays.toString(group.inboundList.toArray()),
-                    Arrays.toString(group.outboundList.toArray()));
+                    Arrays.toString(group.inboundList.toArray()).replace('[', '{').replace(']', '}'),
+                    Arrays.toString(group.outboundList.toArray()).replace('[', '{').replace(']', '}'));
                 csvPrinter.flush();
             }
         }
