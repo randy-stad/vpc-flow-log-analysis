@@ -110,7 +110,7 @@ public class VpcFlowLogAnalysis {
                         // inbound
                         CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[SOURCE_ADDRESS], entries[SOURCE_PORT], entries[PROTOCOL]);
                         if (cidr != null) {
-                            cidr.addOutboundAddress(entries[SOURCE_ADDRESS]);
+                            cidr.addInboundAddress(entries[SOURCE_ADDRESS]);
                         } else {
                             cidr = new CidrGroup(getWhoisRecord(entries[SOURCE_ADDRESS]), entries[SOURCE_PORT], entries[PROTOCOL]);
                             cidr.addInboundAddress(entries[SOURCE_ADDRESS]);
