@@ -99,20 +99,20 @@ public class VpcFlowLogAnalysis {
                     final boolean destUnroutable = addressIsUnroutable(entries[DESTINATION_ADDRESS]);
                     if (sourceUnroutable && !destUnroutable) {
                         // outbound
-                        CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[DESTINATION_ADDRESS], entries[DESTINATION_PORT]);
+                        CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[DESTINATION_ADDRESS], entries[DESTINATION_PORT], entries[PROTOCOL]);
                         if (cidr != null) {
                             cidr.addOutboundAddress(entries[DESTINATION_ADDRESS]);
                         } else {
-                            cidr = new CidrGroup(getWhoisRecord(entries[DESTINATION_ADDRESS]), entries[DESTINATION_PORT]);
+                            cidr = new CidrGroup(getWhoisRecord(entries[DESTINATION_ADDRESS]), entries[DESTINATION_PORT], entries[PROTOCOL]);
                             cidr.addOutboundAddress(entries[DESTINATION_ADDRESS]);
                         }
                     } else if (!sourceUnroutable && destUnroutable) {
                         // inbound
-                        CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[SOURCE_ADDRESS], entries[SOURCE_PORT]);
+                        CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[SOURCE_ADDRESS], entries[SOURCE_PORT], entries[PROTOCOL]);
                         if (cidr != null) {
                             cidr.addOutboundAddress(entries[SOURCE_ADDRESS]);
                         } else {
-                            cidr = new CidrGroup(getWhoisRecord(entries[SOURCE_ADDRESS]), entries[SOURCE_PORT]);
+                            cidr = new CidrGroup(getWhoisRecord(entries[SOURCE_ADDRESS]), entries[SOURCE_PORT], entries[PROTOCOL]);
                             cidr.addInboundAddress(entries[SOURCE_ADDRESS]);
                         }
                     }
@@ -193,7 +193,7 @@ public class VpcFlowLogAnalysis {
         options.addOption("l", "lines", true, "process a maximum number of specified lines in input file");
         options.addOption("o", "output", true, "output file (required if source specified)");
         options.addOption("s", "source", true,
-                "csv file to parse with format SourceAddress, DestinationAddress, SourcePort, DestinationPort, Protocal");
+                "csv file to parse with format SourceAddress, DestinationAddress, SourcePort, DestinationPort, Protocol");
         options.addOption("h", "help", false, "print this message");
 
         return options;

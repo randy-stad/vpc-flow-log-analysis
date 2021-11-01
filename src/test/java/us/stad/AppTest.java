@@ -35,15 +35,16 @@ public class AppTest extends TestCase {
         whois.setOrganization("organization");
         whois.setNetname("netname");
 
-        CidrGroup cidrGroup = new CidrGroup(whois, "443");
+        CidrGroup cidrGroup = new CidrGroup(whois, "443", "TCP");
 
         assertTrue("IP in range", cidrGroup.addressInCidrRange("52.94.228.178"));
         assertFalse("IP not in range", cidrGroup.addressInCidrRange("192.168.0.1"));
         
-        assertNotNull(CidrGroup.getMatchingCidrGroup("52.94.228.178", "443"));
-        assertNull(CidrGroup.getMatchingCidrGroup("52.94.228.178", "80"));
-        assertNull(CidrGroup.getMatchingCidrGroup("192.168.0.1", "443"));
-        assertNull(CidrGroup.getMatchingCidrGroup("192.168.0.1", "80"));
+        assertNotNull(CidrGroup.getMatchingCidrGroup("52.94.228.178", "443", "TCP"));
+        assertNull(CidrGroup.getMatchingCidrGroup("52.94.228.178", "443", "UCP"));
+        assertNull(CidrGroup.getMatchingCidrGroup("52.94.228.178", "80", "TCP"));
+        assertNull(CidrGroup.getMatchingCidrGroup("192.168.0.1", "443", "TCP"));
+        assertNull(CidrGroup.getMatchingCidrGroup("192.168.0.1", "80", "TCP"));
 
         assertTrue(true);
     }

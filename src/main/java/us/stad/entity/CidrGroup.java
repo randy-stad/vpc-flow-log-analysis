@@ -25,10 +25,11 @@ public class CidrGroup {
     String organization;
     String netname;
     String port;
+    String protocol;
     Set<String> inboundList = new HashSet<>();
     Set<String> outboundList = new HashSet<>();
 
-    public CidrGroup(WhoisRecord whois, String port) {
+    public CidrGroup(WhoisRecord whois, String port, String protocol) {
         if (whois.getCidr() != null) {
             final String[] range = whois.getCidr().split(",\\s*");
             for (String i : range) {
@@ -38,6 +39,7 @@ public class CidrGroup {
         this.organization = whois.getOrganization();
         this.netname = whois.getNetname();
         this.port = port;
+        this.protocol = protocol;
         CACHE.put(whois.getCidr(), this);
     }
 
@@ -64,9 +66,9 @@ public class CidrGroup {
         return CACHE_HIT;
     }
 
-    public static CidrGroup getMatchingCidrGroup(String address, String port) {
+    public static CidrGroup getMatchingCidrGroup(String address, String port, String protocol) {
         for (CidrGroup group : CACHE.values()) {
-            if (group.addressInCidrRange(address) && group.port.equalsIgnoreCase(port)) {
+            if (group.addressInCidrRange(address) && group.port.equalsIgnoreCase(port) && group.protocol.equalsIgnoreCase(protocol)) {
                 return group;
             }
         }
@@ -74,12 +76,13 @@ public class CidrGroup {
     }
 
     public static void dumpCache(final Writer writer) throws IOException {
-        CSVFormat csvFormat = CSVFormat.DEFAULT.builder().setHeader("cidr_range", "port", "inbound", "outbound", "netname", "organization", "inbound_ip", "outbound_ip").build();
+        CSVFormat csvFormat = CSVFormat.DEFAULT.builder().setHeader("cidr_range", "port", "protocol", "inbound", "outbound", "netname", "organization", "inbound_ip", "outbound_ip").build();
         try (CSVPrinter csvPrinter = new CSVPrinter(writer, csvFormat)) {
             for (CidrGroup group : CACHE.values()) {
                 csvPrinter.printRecord(
                     Arrays.toString(group.cidrRanges.toArray()).replace('[', '{').replace(']', '}'),
                     group.port,
+                    group.protocol,
                     group.inboundList.isEmpty() ? "false" : "true",
                     group.outboundList.isEmpty() ? "false" : "true",
                     group.netname,
