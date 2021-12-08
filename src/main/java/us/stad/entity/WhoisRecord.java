@@ -13,6 +13,7 @@ public class WhoisRecord implements Serializable {
     @Id
     private String address;
     private String cidr;
+    private String inetnum;
     private String organization;
     private String netname;
 
@@ -30,6 +31,14 @@ public class WhoisRecord implements Serializable {
 
     public void setCidr(String cidr) {
         this.cidr = cidr;
+    }
+
+    public String getInetnum() {
+        return inetnum;
+    }
+
+    public void setInetnum(String inetnum) {
+        this.inetnum = inetnum;
     }
 
     public String getOrganization() {
@@ -61,6 +70,8 @@ public class WhoisRecord implements Serializable {
             this.cidr = line.substring(line.indexOf(':') + 1).trim();
         } else if (line.toLowerCase().startsWith("organization:")) {
             this.organization = line.substring(line.indexOf(':') + 1).trim();
+        } else if (line.toLowerCase().startsWith("inetnum:")) {
+            this.inetnum = line.substring(line.indexOf(':') + 1).trim();
         } else if (line.toLowerCase().startsWith("netname:")) {
             this.netname = line.substring(line.indexOf(':') + 1).trim();
         }

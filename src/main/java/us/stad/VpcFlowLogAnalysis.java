@@ -95,8 +95,8 @@ public class VpcFlowLogAnalysis {
                 }
                 if (Character.isDigit(line.charAt(0))) {
                     String[] entries = line.split("\\s*,\\s*");
-                    final boolean sourceUnroutable = addressIsUnroutable(entries[SOURCE_ADDRESS]);
-                    final boolean destUnroutable = addressIsUnroutable(entries[DESTINATION_ADDRESS]);
+                    final boolean sourceUnroutable = addressIsPrivate(entries[SOURCE_ADDRESS]);
+                    final boolean destUnroutable = addressIsPrivate(entries[DESTINATION_ADDRESS]);
                     if (sourceUnroutable && !destUnroutable) {
                         // outbound
                         CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[DESTINATION_ADDRESS], entries[DESTINATION_PORT], entries[PROTOCOL]);
@@ -127,7 +127,11 @@ public class VpcFlowLogAnalysis {
     static final Ipv4Range RANGE172 = Ipv4Range.parse("172.16.0.0/12");
     static final Ipv4Range RANGE192 = Ipv4Range.parse("192.168.0.0/16");
 
-    private static boolean addressIsUnroutable(final String address) {
+    private static boolean addressIsPrivate(final String address) {
+        // assume all IPv6 are public and avoid issues
+        if (address.contains(":")) {
+            return false;
+        }
         final Ipv4 ipv4 = Ipv4.parse(address);
         return RANGE10.contains(ipv4) || RANGE172.contains(ipv4) || RANGE192.contains(ipv4);
     }
