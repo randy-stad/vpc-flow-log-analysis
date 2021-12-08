@@ -37,3 +37,7 @@ There is help available:
 The script will use the ```whois``` command to perform the lookup. The script has been tested using the macOS Monterey version so your mileage may vary.
 
 Note that the script will create a ```cache``` directory with an H2 database of ```whois``` lookup information. Remove the cache if you want to rebuild with the latest ```whois``` information but realize that lookup will take longer as the cache is recreated.
+
+## Analysis
+
+The output CSV file is best analyzed with a database. SQL in the sql directory is used by the author to load the data in to a local Postgres database. Use the ```create_cidr_map.sql``` script to create the table and then the ```load_cidr_map.sql``` to load the output CSV data.
