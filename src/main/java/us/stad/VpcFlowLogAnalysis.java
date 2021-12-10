@@ -31,6 +31,7 @@ public class VpcFlowLogAnalysis {
 
     private static final Log LOG = LogFactory.getLog(VpcFlowLogAnalysis.class);
     private static final SessionFactory SESSION_FACTORY = new Configuration().configure().buildSessionFactory();
+
     public static void main(String[] args) {
 
         CommandLine line = null;
@@ -54,11 +55,15 @@ public class VpcFlowLogAnalysis {
         }
 
         if (line.hasOption("s")) {
-            long maxLineCount = Long.MAX_VALUE;
-            if (line.hasOption("l")) {
-                maxLineCount = Long.parseLong(line.getOptionValue("l"));
+            long fromLine = 0;
+            long toLine = Long.MAX_VALUE;
+            if (line.hasOption("f")) {
+                fromLine = Long.parseLong(line.getOptionValue("f"));
             }
-            processSourceFile(line.getOptionValue("s"), maxLineCount);
+            if (line.hasOption("t")) {
+                toLine = Long.parseLong(line.getOptionValue("t"));
+            }
+            processSourceFile(line.getOptionValue("s"), fromLine, toLine);
             LOG.info("WHOIS cache hit: " + whoisCacheHit + " miss: " + whoisCacheMiss);
             LOG.info("CIDR cache hit: " + CidrGroup.getCacheHit());
 
@@ -82,40 +87,49 @@ public class VpcFlowLogAnalysis {
     static final int DESTINATION_PORT = 3;
     static final int PROTOCOL = 4;
 
-    private static void processSourceFile(final String filename, final long maxLineCount) {
+    private static void processSourceFile(final String filename, final long from, final long to) {
+        LOG.info("process " + filename + " from " + from + " to " + to);
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String line;
-            long lineCount = 0;
+            long lineNumber = 0;
+            long processedCount = 0;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
-                lineCount++;
-                if (lineCount > maxLineCount) {
+                lineNumber++;
+                if (lineNumber >= to) {
                     return;
                 }
-                if (lineCount % 100000 == 0) {
-                    LOG.info("processed " + lineCount + " lines");
-                }
-                if (Character.isDigit(line.charAt(0))) {
-                    String[] entries = line.split("\\s*,\\s*");
-                    final boolean sourceUnroutable = addressIsPrivate(entries[SOURCE_ADDRESS]);
-                    final boolean destUnroutable = addressIsPrivate(entries[DESTINATION_ADDRESS]);
-                    if (sourceUnroutable && !destUnroutable) {
-                        // outbound
-                        CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[DESTINATION_ADDRESS], entries[DESTINATION_PORT], entries[PROTOCOL]);
-                        if (cidr != null) {
-                            cidr.addOutboundAddress(entries[DESTINATION_ADDRESS]);
-                        } else {
-                            cidr = new CidrGroup(getWhoisRecord(entries[DESTINATION_ADDRESS]), entries[DESTINATION_PORT], entries[PROTOCOL]);
-                            cidr.addOutboundAddress(entries[DESTINATION_ADDRESS]);
-                        }
-                    } else if (!sourceUnroutable && destUnroutable) {
-                        // inbound
-                        CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[SOURCE_ADDRESS], entries[SOURCE_PORT], entries[PROTOCOL]);
-                        if (cidr != null) {
-                            cidr.addInboundAddress(entries[SOURCE_ADDRESS]);
-                        } else {
-                            cidr = new CidrGroup(getWhoisRecord(entries[SOURCE_ADDRESS]), entries[SOURCE_PORT], entries[PROTOCOL]);
-                            cidr.addInboundAddress(entries[SOURCE_ADDRESS]);
+                if (lineNumber > from) {
+                    processedCount++;
+                    if (processedCount % 100000 == 0) {
+                        LOG.info("processed " + processedCount + " lines");
+                    }
+                    if (Character.isDigit(line.charAt(0))) {
+                        String[] entries = line.split("\\s*,\\s*");
+                        final boolean sourcePrivate = addressIsPrivate(entries[SOURCE_ADDRESS]);
+                        final boolean destPrivate = addressIsPrivate(entries[DESTINATION_ADDRESS]);
+                        if (sourcePrivate && !destPrivate) {
+                            // outbound
+                            CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[DESTINATION_ADDRESS],
+                                    entries[DESTINATION_PORT], entries[PROTOCOL]);
+                            if (cidr != null) {
+                                cidr.addOutboundAddress(entries[DESTINATION_ADDRESS]);
+                            } else {
+                                cidr = new CidrGroup(getWhoisRecord(entries[DESTINATION_ADDRESS]),
+                                        entries[DESTINATION_PORT], entries[PROTOCOL]);
+                                cidr.addOutboundAddress(entries[DESTINATION_ADDRESS]);
+                            }
+                        } else if (!sourcePrivate && destPrivate) {
+                            // inbound
+                            CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[SOURCE_ADDRESS],
+                                    entries[SOURCE_PORT], entries[PROTOCOL]);
+                            if (cidr != null) {
+                                cidr.addInboundAddress(entries[SOURCE_ADDRESS]);
+                            } else {
+                                cidr = new CidrGroup(getWhoisRecord(entries[SOURCE_ADDRESS]), entries[SOURCE_PORT],
+                                        entries[PROTOCOL]);
+                                cidr.addInboundAddress(entries[SOURCE_ADDRESS]);
+                            }
                         }
                     }
                 }
@@ -165,7 +179,7 @@ public class VpcFlowLogAnalysis {
             whoisCacheHit++;
             return result;
         }
-    
+
         whoisCacheMiss++;
         result = new WhoisRecord(address);
         String command = "whois " + address;
@@ -196,7 +210,8 @@ public class VpcFlowLogAnalysis {
     private static Options buildOptions() {
 
         Options options = new Options();
-        options.addOption("l", "lines", true, "process a maximum number of specified lines in input file");
+        options.addOption("f", "from", true, "process from this line in the source file");
+        options.addOption("t", "to", true, "process to this line in the source file");
         options.addOption("o", "output", true, "output file (required if source specified)");
         options.addOption("s", "source", true,
                 "csv file to parse with format SourceAddress, DestinationAddress, SourcePort, DestinationPort, Protocol");
