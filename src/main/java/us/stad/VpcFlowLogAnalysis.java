@@ -31,7 +31,6 @@ public class VpcFlowLogAnalysis {
 
     private static final Log LOG = LogFactory.getLog(VpcFlowLogAnalysis.class);
     private static final SessionFactory SESSION_FACTORY = new Configuration().configure().buildSessionFactory();
-
     public static void main(String[] args) {
 
         CommandLine line = null;
@@ -55,9 +54,9 @@ public class VpcFlowLogAnalysis {
         }
 
         if (line.hasOption("s")) {
-            int maxLineCount = Integer.MAX_VALUE;
+            long maxLineCount = Long.MAX_VALUE;
             if (line.hasOption("l")) {
-                maxLineCount = Integer.parseInt(line.getOptionValue("l"));
+                maxLineCount = Long.parseLong(line.getOptionValue("l"));
             }
             processSourceFile(line.getOptionValue("s"), maxLineCount);
             LOG.info("WHOIS cache hit: " + whoisCacheHit + " miss: " + whoisCacheMiss);
@@ -83,15 +82,18 @@ public class VpcFlowLogAnalysis {
     static final int DESTINATION_PORT = 3;
     static final int PROTOCOL = 4;
 
-    private static void processSourceFile(final String filename, final int maxLineCount) {
+    private static void processSourceFile(final String filename, final long maxLineCount) {
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             String line;
-            int lineCount = 0;
+            long lineCount = 0;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 lineCount++;
                 if (lineCount > maxLineCount) {
                     return;
+                }
+                if (lineCount % 100000 == 0) {
+                    LOG.info("processed " + lineCount + " lines");
                 }
                 if (Character.isDigit(line.charAt(0))) {
                     String[] entries = line.split("\\s*,\\s*");
