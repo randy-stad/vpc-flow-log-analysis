@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 
 import com.github.jgonian.ipmath.Ipv4;
 import com.github.jgonian.ipmath.Ipv4Range;
@@ -139,9 +140,14 @@ public class VpcFlowLogAnalysis {
         }
     }
 
-    static final Ipv4Range RANGE10 = Ipv4Range.parse("10.0.0.0/8");
-    static final Ipv4Range RANGE172 = Ipv4Range.parse("172.16.0.0/12");
-    static final Ipv4Range RANGE192 = Ipv4Range.parse("192.168.0.0/16");
+    // list of private IPs, should probably be external but, meh
+    
+    static final Ipv4Range[] PRIVATE_RANGE = {
+        Ipv4Range.parse("10.0.0.0/8"),
+        Ipv4Range.parse("100.0.0.0/16"),
+        Ipv4Range.parse("172.16.0.0/12"),
+        Ipv4Range.parse("192.168.0.0/16")
+    };
 
     private static boolean addressIsPrivate(final String address) {
         // assume all IPv6 are public and avoid issues
@@ -149,7 +155,12 @@ public class VpcFlowLogAnalysis {
             return false;
         }
         final Ipv4 ipv4 = Ipv4.parse(address);
-        return RANGE10.contains(ipv4) || RANGE172.contains(ipv4) || RANGE192.contains(ipv4);
+        for (Ipv4Range range : PRIVATE_RANGE) {
+            if (range.contains(ipv4)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static int whoisCacheHit = 0;
