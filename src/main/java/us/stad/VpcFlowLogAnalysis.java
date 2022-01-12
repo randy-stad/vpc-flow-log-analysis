@@ -5,6 +5,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.text.NumberFormat;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Locale;
 
 import com.github.jgonian.ipmath.Ipv4;
@@ -92,6 +94,7 @@ public class VpcFlowLogAnalysis {
     private static void processSourceFile(final String filename, final long from, final long to) {
         LOG.info("process " + filename + " from " + from + " to " + to);
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            Instant start = Instant.now();
             String line;
             long lineNumber = 0;
             long processedCount = 0;
@@ -104,7 +107,15 @@ public class VpcFlowLogAnalysis {
                 if (lineNumber > from) {
                     processedCount++;
                     if (processedCount % 100000 == 0) {
-                        LOG.info("processed " + NumberFormat.getNumberInstance(Locale.US).format(processedCount) + " lines");
+                        Duration interval = Duration.between(start, Instant.now());
+                        long perSecond = processedCount / 1000 / interval.getSeconds();
+                        LOG.info("processed "
+                                + NumberFormat.getNumberInstance(Locale.US).format(processedCount)
+                                + " lines, elapsed time "
+                                + interval.toString()
+                                + ", "
+                                + NumberFormat.getNumberInstance(Locale.US).format(perSecond)
+                                + " seconds per 1000 lines");
                     }
                     if (Character.isDigit(line.charAt(0))) {
                         String[] entries = line.split("\\s*,\\s*");
@@ -142,12 +153,12 @@ public class VpcFlowLogAnalysis {
     }
 
     // list of private IPs, should probably be external but, meh
-    
+
     static final Ipv4Range[] PRIVATE_RANGE = {
-        Ipv4Range.parse("10.0.0.0/8"),
-        Ipv4Range.parse("100.0.0.0/16"),
-        Ipv4Range.parse("172.16.0.0/12"),
-        Ipv4Range.parse("192.168.0.0/16")
+            Ipv4Range.parse("10.0.0.0/8"),
+            Ipv4Range.parse("100.0.0.0/16"),
+            Ipv4Range.parse("172.16.0.0/12"),
+            Ipv4Range.parse("192.168.0.0/16")
     };
 
     private static boolean addressIsPrivate(final String address) {
