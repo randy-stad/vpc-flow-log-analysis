@@ -4,7 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 import com.github.jgonian.ipmath.Ipv4;
 import com.github.jgonian.ipmath.Ipv4Range;
@@ -103,7 +104,7 @@ public class VpcFlowLogAnalysis {
                 if (lineNumber > from) {
                     processedCount++;
                     if (processedCount % 100000 == 0) {
-                        LOG.info("processed " + processedCount + " lines");
+                        LOG.info("processed " + NumberFormat.getNumberInstance(Locale.US).format(processedCount) + " lines");
                     }
                     if (Character.isDigit(line.charAt(0))) {
                         String[] entries = line.split("\\s*,\\s*");
@@ -178,7 +179,7 @@ public class VpcFlowLogAnalysis {
 
         // load from database
 
-        try (Session session = SESSION_FACTORY.getCurrentSession()) {
+        try (Session session = SESSION_FACTORY.openSession()) {
             session.getTransaction().begin();
             result = session.get(WhoisRecord.class, address);
             session.getTransaction().commit();
@@ -207,7 +208,7 @@ public class VpcFlowLogAnalysis {
 
         // persist to database
 
-        try (Session session = SESSION_FACTORY.getCurrentSession()) {
+        try (Session session = SESSION_FACTORY.openSession()) {
             session.getTransaction().begin();
             session.persist(result);
             session.getTransaction().commit();
