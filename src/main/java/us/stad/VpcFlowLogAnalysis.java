@@ -95,6 +95,7 @@ public class VpcFlowLogAnalysis {
         LOG.info("process " + filename + " from " + from + " to " + to);
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             Instant start = Instant.now();
+            Instant passStart = Instant.now();
             String line;
             long lineNumber = 0;
             long processedCount = 0;
@@ -107,15 +108,17 @@ public class VpcFlowLogAnalysis {
                 if (lineNumber > from) {
                     processedCount++;
                     if (processedCount % 100000 == 0) {
-                        Duration interval = Duration.between(start, Instant.now());
-                        long perSecond = processedCount / 1000 / interval.getSeconds();
+                        Instant now = Instant.now();
+                        Duration interval = Duration.between(start, now);
+                        Duration passInterval = Duration.between(passStart, now);
+                        passStart = now;
                         LOG.info("processed "
                                 + NumberFormat.getNumberInstance(Locale.US).format(processedCount)
                                 + " lines, elapsed time "
                                 + interval.toString()
                                 + ", "
-                                + NumberFormat.getNumberInstance(Locale.US).format(perSecond)
-                                + " seconds per 1000 lines");
+                                + NumberFormat.getNumberInstance(Locale.US).format(passInterval.toSeconds())
+                                + " seconds this pass");
                     }
                     if (Character.isDigit(line.charAt(0))) {
                         String[] entries = line.split("\\s*,\\s*");
