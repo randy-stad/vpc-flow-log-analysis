@@ -92,7 +92,7 @@ public class VpcFlowLogAnalysis {
     static final int PROTOCOL = 4;
 
     private static void processSourceFile(final String filename, final long from, final long to) {
-        LOG.info("process " + filename + " from " + NumberFormat.getNumberInstance(Locale.US).format(from) + " to "
+        LOG.info("process " + filename + " from lines " + NumberFormat.getNumberInstance(Locale.US).format(from) + " to "
                 + NumberFormat.getNumberInstance(Locale.US).format(to));
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             Instant start = Instant.now();
