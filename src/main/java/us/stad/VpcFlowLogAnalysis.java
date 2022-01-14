@@ -92,7 +92,8 @@ public class VpcFlowLogAnalysis {
     static final int PROTOCOL = 4;
 
     private static void processSourceFile(final String filename, final long from, final long to) {
-        LOG.info("process " + filename + " from " + from + " to " + to);
+        LOG.info("process " + filename + " from " + NumberFormat.getNumberInstance(Locale.US).format(from) + " to "
+                + NumberFormat.getNumberInstance(Locale.US).format(to));
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
             Instant start = Instant.now();
             Instant passStart = Instant.now();
@@ -122,29 +123,33 @@ public class VpcFlowLogAnalysis {
                     }
                     if (Character.isDigit(line.charAt(0))) {
                         String[] entries = line.split("\\s*,\\s*");
-                        final boolean sourcePrivate = addressIsPrivate(entries[SOURCE_ADDRESS]);
-                        final boolean destPrivate = addressIsPrivate(entries[DESTINATION_ADDRESS]);
-                        if (sourcePrivate && !destPrivate) {
-                            // outbound
-                            CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[DESTINATION_ADDRESS],
-                                    entries[DESTINATION_PORT], entries[PROTOCOL]);
-                            if (cidr != null) {
-                                cidr.addOutboundAddress(entries[DESTINATION_ADDRESS]);
-                            } else {
-                                cidr = new CidrGroup(getWhoisRecord(entries[DESTINATION_ADDRESS]),
+                        if (entries.length != 5) {
+                            LOG.error("invalid line: " + line);
+                        } else {
+                            final boolean sourcePrivate = addressIsPrivate(entries[SOURCE_ADDRESS]);
+                            final boolean destPrivate = addressIsPrivate(entries[DESTINATION_ADDRESS]);
+                            if (sourcePrivate && !destPrivate) {
+                                // outbound
+                                CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[DESTINATION_ADDRESS],
                                         entries[DESTINATION_PORT], entries[PROTOCOL]);
-                                cidr.addOutboundAddress(entries[DESTINATION_ADDRESS]);
-                            }
-                        } else if (!sourcePrivate && destPrivate) {
-                            // inbound
-                            CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[SOURCE_ADDRESS],
-                                    entries[SOURCE_PORT], entries[PROTOCOL]);
-                            if (cidr != null) {
-                                cidr.addInboundAddress(entries[SOURCE_ADDRESS]);
-                            } else {
-                                cidr = new CidrGroup(getWhoisRecord(entries[SOURCE_ADDRESS]), entries[SOURCE_PORT],
-                                        entries[PROTOCOL]);
-                                cidr.addInboundAddress(entries[SOURCE_ADDRESS]);
+                                if (cidr != null) {
+                                    cidr.addOutboundAddress(entries[DESTINATION_ADDRESS]);
+                                } else {
+                                    cidr = new CidrGroup(getWhoisRecord(entries[DESTINATION_ADDRESS]),
+                                            entries[DESTINATION_PORT], entries[PROTOCOL]);
+                                    cidr.addOutboundAddress(entries[DESTINATION_ADDRESS]);
+                                }
+                            } else if (!sourcePrivate && destPrivate) {
+                                // inbound
+                                CidrGroup cidr = CidrGroup.getMatchingCidrGroup(entries[SOURCE_ADDRESS],
+                                        entries[SOURCE_PORT], entries[PROTOCOL]);
+                                if (cidr != null) {
+                                    cidr.addInboundAddress(entries[SOURCE_ADDRESS]);
+                                } else {
+                                    cidr = new CidrGroup(getWhoisRecord(entries[SOURCE_ADDRESS]), entries[SOURCE_PORT],
+                                            entries[PROTOCOL]);
+                                    cidr.addInboundAddress(entries[SOURCE_ADDRESS]);
+                                }
                             }
                         }
                     }
