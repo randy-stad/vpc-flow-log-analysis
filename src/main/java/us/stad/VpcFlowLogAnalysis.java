@@ -218,7 +218,6 @@ public class VpcFlowLogAnalysis {
         whoisCacheMiss++;
         result = new WhoisRecord(address);
         String command = "whois " + address;
-        // LOG.info(command);
 
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(Runtime.getRuntime().exec(command).getInputStream()))) {
