@@ -100,6 +100,7 @@ public class VpcFlowLogAnalysis {
             String line;
             long lineNumber = 0;
             long processedCount = 0;
+            long prevWhoisCacheMiss = 0;
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 lineNumber++;
@@ -113,13 +114,15 @@ public class VpcFlowLogAnalysis {
                         Duration interval = Duration.between(start, now);
                         Duration passInterval = Duration.between(passStart, now);
                         passStart = now;
-                        LOG.info("processed "
+                        LOG.info("this pass "
                                 + NumberFormat.getNumberInstance(Locale.US).format(processedCount)
                                 + " lines, elapsed time "
                                 + interval.toString()
                                 + ", "
                                 + NumberFormat.getNumberInstance(Locale.US).format(passInterval.toSeconds())
-                                + " seconds this pass");
+                                + " seconds, whois cache miss: "
+                                + NumberFormat.getNumberInstance(Locale.US).format(whoisCacheMiss - prevWhoisCacheMiss));
+                        prevWhoisCacheMiss = whoisCacheMiss;
                     }
                     if (Character.isDigit(line.charAt(0))) {
                         String[] entries = line.split("\\s*,\\s*");
@@ -165,6 +168,7 @@ public class VpcFlowLogAnalysis {
     static final Ipv4Range[] PRIVATE_RANGE = {
             Ipv4Range.parse("10.0.0.0/8"),
             Ipv4Range.parse("100.0.0.0/16"),
+            Ipv4Range.parse("10.180.0.0/16"),
             Ipv4Range.parse("172.16.0.0/12"),
             Ipv4Range.parse("192.168.0.0/16")
     };
@@ -214,6 +218,7 @@ public class VpcFlowLogAnalysis {
         whoisCacheMiss++;
         result = new WhoisRecord(address);
         String command = "whois " + address;
+        // LOG.info(command);
 
         try (BufferedReader reader = new BufferedReader(
                 new InputStreamReader(Runtime.getRuntime().exec(command).getInputStream()))) {
